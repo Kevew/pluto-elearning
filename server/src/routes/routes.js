@@ -186,4 +186,28 @@ router.get('/verify/:_id', async function(req, res){
     });
 });
 
+
+// User Verification
+router.post('/login', async function(req, res){
+    let email = req.body.email;
+    let pwd = req.body.pwd;
+    User.find({email: email, password: pwd}).then(result => {
+        if(result.length > 0){
+            res.status(200).json({
+                status: "SUCCESS",
+            })
+        }else{
+            res.status(200).json({
+                status: "FAILED",
+                message: "Unable to find user account based on login info!"
+            })
+        }
+    }).catch(err => {
+        res.status(500).json({
+            status: "FAILED",
+            message: "Internal Server Error"
+        })
+    })
+});
+
 module.exports = router;
