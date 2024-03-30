@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const express = require("express");
 const routes = require('./routes/routes');
+var cookieParser = require('cookie-parser');
 
 require('dotenv').config()
 const connectionLink = process.env.DATABASE_URL;
@@ -20,8 +21,7 @@ db.once('connected', () =>{
 
 //REST API
 const app = express();
-//Allow app to parse json
-app.use(express.json());
+
 
 const cors = require('cors');
 
@@ -31,6 +31,12 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
   }));
+
+//Allow app to parse json
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+
 
 app.use('/api', routes);
 

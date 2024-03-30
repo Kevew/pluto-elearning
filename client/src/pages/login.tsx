@@ -1,31 +1,57 @@
 import loginsideimage from "../assets/loginpageimage.png"
-import google_icon from "../assets/Google.svg"
-import email_icon from "../assets/email.png"
-import passowrd_icon from "../assets/password.png"
-import person_icon from "../assets/person.png"
 
-import axios from "axios";
-import React, { useState } from "react";
-import { Link } from 'react-router-dom';
+import axios from "../api/axios";
+const LOGIN_URL = '/api/login';
+
+import { useState, useRef, useEffect, useContext } from "react";
+import  AuthContext from '../context/AuthProvider';
+import { Link, useNavigate } from 'react-router-dom';
 
 
 export default function Login() {
-  const [formData, setFormData] = useState({
-      email: '',
-      password: ''
-  });
+  const navigate = useNavigate();
+  const { setAuth } = useContext(AuthContext);
+  const userRef = useRef();
+  const errRef = useRef();
+  const [errMsg, setErrMsg] = useState('');
 
-  const handleChange = (e) => {
-      setFormData({...formData, [e.target.name]: e.target.value});
-  };
+  const [email, setEmail] = useState('');
+  const [pwd, setPwd] = useState('');
 
-  const handleSubmit = async (e) => {
+  useEffect(() => {
+    if(userRef.current != undefined){
+      userRef.current.focus();
+    }
+  }, []);
+
+  useEffect(() => {
+    setErrMsg('');
+  }, [email, pwd])
+
+  const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
       try {
-          const response = await axios.post('http://localhost:3010/api/login/', formData);
-          console.log(response.data);
+          const response = await axios.post(LOGIN_URL, 
+                JSON.stringify({ email, pwd }),
+                {
+                    headers: { 'Content-Type': 'application/json' },
+                    withCredentials: true
+                }
+          );
+          if(response.data.status == "SUCCESS"){
+            window.localStorage.setItem("LogedIn", "True");
+            setEmail('');
+            setPwd('');
+            navigate("/home");
+            location.reload();
+          }else{
+            setErrMsg('Incorrect information. User not found!')
+          }
           // Handle response here (e.g., redirect to login)
       } catch (error) {
+        if(!error?.response){
+          setErrMsg('No Server Response')
+        }
           console.error('Error during form submission', error);
       }
   };
@@ -44,18 +70,29 @@ export default function Login() {
         <form onSubmit={handleSubmit}>
         <div className="auth-inputs">
           <div className="auth-input">
-            <input className="auth-input-box" type="email" placeholder="Email" name="email" onChange={handleChange}/>
+            <input className="auth-input-box"
+                  autoComplete="off"
+                  type="email" 
+                  placeholder="Email" 
+                  name="email"
+                  required
+                  onChange={(e) => setEmail(e.target.value)}/>
           </div>
         </div>
         <div className="auth-inputs">
           <div className="auth-input">
-            <input className="auth-input-box" type="password" placeholder="Password" name="password" onChange={handleChange}/>
+            <input className="auth-input-box" 
+                  type="password"
+                  placeholder="Password"
+                  name="password"
+                  required
+                  onChange={(e) => setPwd(e.target.value)}/>
           </div>
         </div>
         <button type ="submit" className="auth-submit auth-blue">Login</button>
         </form>
-        <Link to="/sign" className="auth-switch">Already Signed Up? <span>Login</span></Link>
+        <Link to="/sign" className="auth-switch">Haven't Signed Up Yet? <span>Sign Up</span></Link>
       </div>
-      </div>
+    </div>
   )
   }
